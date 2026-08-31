@@ -42,6 +42,16 @@ Graphify 레포가 **아닌** 다른 레포에서 새 세션을 열고 확인한
 
 네 번째가 이 스킬의 존재 이유다. 나머지가 다 통과해도 이것이 실패하면 재작성 실패로 본다.
 
+## 기각한 최적화 — `label --missing-only`
+
+**재빌드 6~7초를 0초로 줄일 수 있지만 쓰지 않는다.** 실측: 무변경 재빌드 6초 중 `extract`가 0초, 전부 `label`이다. `label --missing-only`는 기존 이름을 보존하고 없는 것만 채우므로 무변경 시 0초다.
+
+그런데 **커뮤니티 번호는 재사용되고, `--missing-only`는 기존 이름이 아직 맞는지 보지 않는다.** 재현: 2모듈 코퍼스에 다른 도메인 3개를 넣고 원래 2개를 지운 뒤 `--missing-only`로 갱신하자, `"Alpha Greeting Module"`이라는 이름이 `inventory_*` 함수 3개를 담게 되고 `"Beta Text Normalization"`이 `payments_*`를 담게 됐다. 경고는 없었다.
+
+기각 사유는 속도-정확도 절충이 아니라 **이 스킬의 존재 이유와 충돌한다**는 것이다. SKILL.md의 중심 함정은 "커뮤니티 이름은 `query`가 매칭하는 어휘의 일부"이고, 빈 결과에서 회복하는 경로가 바로 그 어휘를 확인하는 것이다. 스테일 라벨은 **함정을 고치는 도구를 오염시켜** 없는 코드가 있다고 말하게 만든다. 6초로 살 수 없는 것이다.
+
+같은 이유로 `graphify hook install`(post-commit 자동 재빌드)도 채택하지 않았다. 훅이 부르는 `watch._rebuild_code`는 문서상 "AST extraction + build + optional cluster + report. **No LLM needed**"라 커뮤니티 재명명을 하지 않는다 — 같은 결함을 공유할 가능성이 있으나 직접 확인하지는 않았다.
+
 ## 기계적 게이트
 
 ```bash
